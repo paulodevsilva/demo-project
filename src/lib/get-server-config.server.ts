@@ -1,9 +1,9 @@
 import { createServerFn } from "@tanstack/react-start";
-import { configService } from "./config.server";
+import { appConfig } from "./config.server";
+import { withObservation } from "./observability.server";
 
 export const getServerConfigServerFn = createServerFn().handler(async () => {
-  if (!configService.isInitialized()) {
-    await configService.initialize();
-  }
-  return configService.getAppConfig();
+  return withObservation("config.getServerConfig", async () => {
+    return appConfig;
+  });
 });

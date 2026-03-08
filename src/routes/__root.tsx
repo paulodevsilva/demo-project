@@ -14,6 +14,7 @@ import { Alert, AlertDescription, AlertTitle } from "@/components/ui/alert";
 import { Button } from "@/components/ui/button";
 import { ToastContainer } from "react-toastify";
 import toastifyStyles from "react-toastify/dist/ReactToastify.css?url";
+import { buildSecurityHeaders } from "@/lib/security-headers";
 
 interface MyRouterContext {
   queryClient: QueryClient;
@@ -118,6 +119,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
     return { user };
   },
   errorComponent: RootErrorComponent,
+  headers: () => buildSecurityHeaders(),
   head: () => ({
     meta: [
       {
@@ -161,7 +163,7 @@ export const Route = createRootRouteWithContext<MyRouterContext>()({
       },
       {
         rel: "stylesheet",
-        href: "https://fonts.googleapis.com/css2?family=Raleway:ital,wght@0,100..900;1,100..900&family=Roboto:ital,wght@0,100;0,300;0,400;0,500;0,700;0,900;1,100;1,300;1,400;1,500;1,700;1,900&display=swap",
+        href: "https://fonts.googleapis.com/css2?family=Montserrat:wght@600;700;800&family=Poppins:wght@400;500;600;700&display=swap",
       },
     ],
   }),
@@ -176,7 +178,7 @@ function RootDocument({ children }: { children: React.ReactNode }) {
       <head>
         <HeadContent />
       </head>
-      <body className="overflow-hidden">
+      <body className="overflow-x-hidden">
         {children}
         <ToastContainer position="top-right" autoClose={4000} theme="light" />
         {config.environment === "development" && (

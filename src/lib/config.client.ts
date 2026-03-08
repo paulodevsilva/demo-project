@@ -29,7 +29,6 @@ export function getClientConfig(): ClientConfig {
         (resolveClientEnv("VITE_ENVIRONMENT") as "development" | "test" | "staging" | "production"),
     };
   }
-  console.log("Client configuration loaded:", _clientConfig);
   return _clientConfig;
 }
 
