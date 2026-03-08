@@ -1,6 +1,5 @@
 generator client {
-  provider = "prisma-client"
-  output   = "./generated/client"
+  provider = "prisma-client-js"
 }
 
 datasource db {
@@ -8,19 +7,29 @@ datasource db {
 }
 
 model User {
-  id        String    @id @default(uuid())
-  email     String    @unique
-  name      String?
-  createdAt DateTime  @default(now())
-  updatedAt DateTime  @updatedAt
-  password  String
-  workouts  Workout[]
+  id                String            @id @default(uuid())
+  email             String            @unique
+  name              String?
+  createdAt         DateTime          @default(now())
+  updatedAt         DateTime          @updatedAt
+  password          String
+  workouts          Workout[]
+  movements         Movement[]
+  bodyWeightEntries BodyWeightEntry[]
 }
 
 model Movement {
-  id   String @id @default(uuid())
-  name String
-  sets Set[]
+  id            String  @id @default(uuid())
+  userId        String
+  user          User    @relation(fields: [userId], references: [id])
+  name          String
+  isBodyweight  Boolean @default(false)
+  defaultWeight Int?
+  defaultReps   Int?
+  sets          Set[]
+
+  @@unique([userId, name])
+  @@index([userId, isBodyweight])
 }
 
 model Workout {
@@ -29,6 +38,8 @@ model Workout {
   id          String    @id @default(uuid())
   completedAt DateTime?
   sets        Set[]
+
+  @@index([userId, completedAt(sort: Desc)])
 }
 
 model Set {
@@ -39,4 +50,18 @@ model Set {
   movement   Movement @relation(fields: [movementId], references: [id])
   reps       Int
   weight     Int
+
+  @@index([workoutId])
+  @@index([movementId, workoutId])
+}
+
+model BodyWeightEntry {
+  id         String   @id @default(uuid())
+  userId     String
+  user       User     @relation(fields: [userId], references: [id])
+  weight     Int
+  measuredAt DateTime @default(now())
+  createdAt  DateTime @default(now())
+
+  @@index([userId, measuredAt(sort: Desc)])
 }
