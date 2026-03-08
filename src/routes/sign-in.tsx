@@ -1,20 +1,9 @@
 import { createFileRoute, Link, redirect, useRouter } from "@tanstack/react-router";
-import { createServerFn } from "@tanstack/react-start";
 import { useState } from "react";
 import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { Button } from "@/components/ui/button";
 import { Input } from "@/components/ui/input";
 import { signInServerFn } from "@/lib/auth.server";
-import { getServerSidePrismaClient } from "@/lib/db.server";
-import { configService } from "@/lib/config.server";
-
-const getAllUsersServerFn = createServerFn().handler(async () => {
-  if (configService.getAppConfig().environment === "production") throw new Error("Forbidden!");
-  const prisma = await getServerSidePrismaClient();
-  return prisma.user.findMany({
-    select: { id: true, email: true, name: true, createdAt: true, password: true },
-  });
-});
 
 export const Route = createFileRoute("/sign-in")({
   beforeLoad: ({ context }) => {
@@ -52,20 +41,20 @@ function SignInPage() {
   };
 
   return (
-    <div className="min-h-screen flex items-center justify-center bg-gradient-to-br from-slate-50 to-slate-100 px-4">
-      <Card className="w-full max-w-md">
+    <div className="flex min-h-screen items-center justify-center px-4 py-10">
+      <Card className="animate-rise-in w-full max-w-md">
         <CardHeader className="text-center space-y-2">
           <img src="/wordmark.svg" alt="Logo" className="h-8 mx-auto" />
-          <CardTitle className="text-2xl font-semibold text-gray-900">Sign in to your account</CardTitle>
-          <p className="text-sm text-gray-500">Enter your credentials to continue</p>
+          <CardTitle className="text-2xl font-semibold text-slate-900">Sign in to your account</CardTitle>
+          <p className="text-sm text-slate-500">Enter your credentials to continue</p>
         </CardHeader>
         <CardContent>
           <form onSubmit={handleSubmit} className="space-y-4">
             {error && (
-              <div className="p-3 text-sm text-red-600 bg-red-50 border border-red-200 rounded-lg">{error}</div>
+              <div className="rounded-xl border border-red-200 bg-red-50 p-3 text-sm text-red-600">{error}</div>
             )}
             <div className="space-y-2">
-              <label htmlFor="email" className="text-sm font-medium text-gray-700">
+              <label htmlFor="email" className="text-sm font-medium text-slate-700">
                 Email
               </label>
               <Input
@@ -79,7 +68,7 @@ function SignInPage() {
               />
             </div>
             <div className="space-y-2">
-              <label htmlFor="password" className="text-sm font-medium text-gray-700">
+              <label htmlFor="password" className="text-sm font-medium text-slate-700">
                 Password
               </label>
               <Input
@@ -96,25 +85,12 @@ function SignInPage() {
               {isLoading ? "Signing in..." : "Sign in"}
             </Button>
           </form>
-          <p className="mt-4 text-center text-sm text-gray-500">
+          <p className="mt-4 text-center text-sm text-slate-500">
             Don't have an account?{" "}
             <Link to="/create-account" className="text-primary hover:underline font-medium">
               Create one
             </Link>
           </p>
-          {import.meta.env.DEV && (
-            <Button
-              type="button"
-              variant="ghost"
-              size="sm"
-              className="w-full mt-4 text-xs text-slate-400"
-              onClick={async () => {
-                const users = await getAllUsersServerFn();
-                console.log("All users:", users);
-              }}>
-              [DEV] Print all users to console
-            </Button>
-          )}
         </CardContent>
       </Card>
     </div>
