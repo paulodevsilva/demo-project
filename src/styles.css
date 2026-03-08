@@ -1,5 +1,74 @@
 @import "tailwindcss";
 
 @theme {
-  --color-primary: oklch(37.8% 0.077 168.94);
+  --font-sans: "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --font-display: "Montserrat", "Poppins", ui-sans-serif, system-ui, sans-serif;
+  --color-primary: oklch(44% 0.12 184);
+  --color-primary-soft: oklch(92% 0.03 184);
+  --color-surface: oklch(99% 0.004 196);
+  --color-surface-2: oklch(96% 0.008 196);
+  --color-ink: oklch(22% 0.015 233);
+  --color-muted-ink: oklch(50% 0.02 235);
+  --radius-card: 1rem;
+}
+
+@layer base {
+  * {
+    border-color: color-mix(in oklab, var(--color-muted-ink) 20%, white);
+  }
+
+  html,
+  body {
+    min-height: 100%;
+  }
+
+  body {
+    font-family: var(--font-sans);
+    color: var(--color-ink);
+    background-color: #f3f7f8;
+    background-image:
+      radial-gradient(circle at 0% 0%, rgba(20, 120, 130, 0.08), transparent 38%),
+      radial-gradient(circle at 100% 100%, rgba(130, 145, 170, 0.08), transparent 42%);
+  }
+
+  h1,
+  h2,
+  h3 {
+    font-family: var(--font-display);
+    letter-spacing: -0.015em;
+  }
+
+  @media (prefers-reduced-motion: no-preference) {
+    a,
+    button,
+    input,
+    select {
+      transition-timing-function: cubic-bezier(0.22, 1, 0.36, 1);
+      transition-duration: 260ms;
+    }
+  }
+}
+
+@keyframes rise-in {
+  from {
+    opacity: 0;
+    transform: translateY(10px);
+  }
+
+  to {
+    opacity: 1;
+    transform: translateY(0);
+  }
+}
+
+@layer utilities {
+  .animate-rise-in {
+    animation: rise-in 520ms cubic-bezier(0.16, 1, 0.3, 1) both;
+  }
+
+  @media (prefers-reduced-motion: reduce) {
+    .animate-rise-in {
+      animation: none;
+    }
+  }
 }

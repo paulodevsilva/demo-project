@@ -10,6 +10,11 @@ import { toast } from "react-toastify";
 export const getRouter = () => {
   const queryClient = new QueryClient({
     defaultOptions: {
+      queries: {
+        staleTime: 30 * 1000,
+        gcTime: 10 * 60 * 1000,
+        refetchOnWindowFocus: false,
+      },
       mutations: {
         onError: (error) => {
           toast.error(`${error.message}`);
