@@ -5,4 +5,5 @@ export const movementsQueryOptions = () =>
   queryOptions({
     queryKey: ["movements"],
     queryFn: () => getMovementsServerFn(),
+    staleTime: 10 * 60 * 1000,
   });
