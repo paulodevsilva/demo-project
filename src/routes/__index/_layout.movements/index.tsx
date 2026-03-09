@@ -6,6 +6,7 @@ import { Card, CardContent, CardHeader, CardTitle } from "@/components/ui/card";
 import { useSuspenseQuery, useMutation } from "@tanstack/react-query";
 import { movementsQueryOptions } from "./-queries/movements";
 import { createMovementServerFn, deleteMovementServerFn, updateMovementServerFn } from "@/lib/movements.server";
+import { showErrorToast, showSuccessToast, showWarningToast } from "@/components/ui/app-toast";
 
 type Movement = {
   id: string;
@@ -40,7 +41,11 @@ function MovementsPage() {
     mutationFn: (data: { name: string; isBodyweight: boolean; defaultWeight?: number; defaultReps?: number }) =>
       createMovementServerFn({ data }),
     onSuccess: (result) => {
-      if (!result?.success || !result.movement) return;
+      if (!result?.success || !result.movement) {
+        const errorMessage = (result as { error?: string } | undefined)?.error;
+        showErrorToast("Could not create movement", errorMessage ?? "Please try again.");
+        return;
+      }
       const movement = result.movement as Movement;
       queryClient.setQueryData(movementsQueryOptions().queryKey, (previous: Movement[] | undefined) =>
         previous ? [...previous, movement].sort((a, b) => a.name.localeCompare(b.name)) : [movement],
@@ -49,17 +54,25 @@ function MovementsPage() {
       setIsBodyweight(false);
       setDefaultWeight("");
       setDefaultReps("");
+      showSuccessToast("Movement created", `${movement.name} was added.`);
     },
+    onError: () => showErrorToast("Could not create movement", "Failed to create movement."),
   });
 
   const deleteMovementMutation = useMutation({
     mutationFn: (movementId: string) => deleteMovementServerFn({ data: { movementId } }),
     onSuccess: (result, movementId) => {
-      if (!result?.success) return;
+      if (!result?.success) {
+        const errorMessage = (result as { error?: string } | undefined)?.error;
+        showErrorToast("Could not delete movement", errorMessage ?? "Please try again.");
+        return;
+      }
       queryClient.setQueryData(movementsQueryOptions().queryKey, (previous: Movement[] | undefined) =>
         previous ? previous.filter((movement) => movement.id !== movementId) : previous,
       );
+      showSuccessToast("Movement deleted");
     },
+    onError: () => showErrorToast("Could not delete movement", "Failed to delete movement."),
   });
 
   const updateMovementMutation = useMutation({
@@ -71,7 +84,11 @@ function MovementsPage() {
       defaultReps?: number;
     }) => updateMovementServerFn({ data }),
     onSuccess: (result, variables) => {
-      if (!result?.success) return;
+      if (!result?.success) {
+        const errorMessage = (result as { error?: string } | undefined)?.error;
+        showErrorToast("Could not update movement", errorMessage ?? "Please try again.");
+        return;
+      }
       queryClient.setQueryData(movementsQueryOptions().queryKey, (previous: Movement[] | undefined) =>
         previous
           ? previous
@@ -94,18 +111,29 @@ function MovementsPage() {
       setEditIsBodyweight(false);
       setEditDefaultWeight("");
       setEditDefaultReps("");
+      showSuccessToast("Movement updated", `${variables.name} was updated.`);
     },
+    onError: () => showErrorToast("Could not update movement", "Failed to update movement."),
   });
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     const trimmedName = name.trim();
-    if (!trimmedName) return;
+    if (!trimmedName) {
+      showWarningToast("Movement name is required");
+      return;
+    }
     const parsedDefaultWeight = isBodyweight ? undefined : defaultWeight.trim() === "" ? undefined : Number.parseInt(defaultWeight, 10);
     const parsedDefaultReps = defaultReps.trim() === "" ? undefined : Number.parseInt(defaultReps, 10);
 
-    if (parsedDefaultWeight !== undefined && (!Number.isFinite(parsedDefaultWeight) || parsedDefaultWeight < 0)) return;
-    if (parsedDefaultReps !== undefined && (!Number.isFinite(parsedDefaultReps) || parsedDefaultReps < 1)) return;
+    if (parsedDefaultWeight !== undefined && (!Number.isFinite(parsedDefaultWeight) || parsedDefaultWeight < 0)) {
+      showWarningToast("Invalid default weight", "Default weight must be zero or greater.");
+      return;
+    }
+    if (parsedDefaultReps !== undefined && (!Number.isFinite(parsedDefaultReps) || parsedDefaultReps < 1)) {
+      showWarningToast("Invalid default reps", "Default reps must be at least 1.");
+      return;
+    }
 
     createMovementMutation.mutate({
       name: trimmedName,
@@ -133,7 +161,10 @@ function MovementsPage() {
 
   const handleSaveEdit = (movementId: string) => {
     const trimmedName = editName.trim();
-    if (!trimmedName) return;
+    if (!trimmedName) {
+      showWarningToast("Movement name is required");
+      return;
+    }
     const parsedDefaultWeight = editIsBodyweight
       ? undefined
       : editDefaultWeight.trim() === ""
@@ -141,8 +172,14 @@ function MovementsPage() {
         : Number.parseInt(editDefaultWeight, 10);
     const parsedDefaultReps = editDefaultReps.trim() === "" ? undefined : Number.parseInt(editDefaultReps, 10);
 
-    if (parsedDefaultWeight !== undefined && (!Number.isFinite(parsedDefaultWeight) || parsedDefaultWeight < 0)) return;
-    if (parsedDefaultReps !== undefined && (!Number.isFinite(parsedDefaultReps) || parsedDefaultReps < 1)) return;
+    if (parsedDefaultWeight !== undefined && (!Number.isFinite(parsedDefaultWeight) || parsedDefaultWeight < 0)) {
+      showWarningToast("Invalid default weight", "Default weight must be zero or greater.");
+      return;
+    }
+    if (parsedDefaultReps !== undefined && (!Number.isFinite(parsedDefaultReps) || parsedDefaultReps < 1)) {
+      showWarningToast("Invalid default reps", "Default reps must be at least 1.");
+      return;
+    }
 
     updateMovementMutation.mutate({
       movementId,
@@ -162,7 +199,7 @@ function MovementsPage() {
           <CardTitle>Add New Movement</CardTitle>
         </CardHeader>
         <CardContent>
-          <form onSubmit={handleSubmit} className="space-y-4">
+          <form noValidate onSubmit={handleSubmit} className="space-y-4">
             <div className="flex flex-col gap-3 sm:flex-row">
               <Input
                 data-testid="movement-name-input"
