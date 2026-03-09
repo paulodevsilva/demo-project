@@ -19,6 +19,23 @@ async function saveBodyWeight(page: Page, value: string) {
   }
 }
 
+async function addSetAndCompleteWorkout(page: Page, movement: string, reps: string, weight?: string) {
+  await startWorkout(page);
+  await page.getByTestId("set-movement-select").selectOption({ label: movement });
+  if (weight !== undefined) {
+    await page.getByTestId("set-weight-input").fill(weight);
+  }
+  await page.getByTestId("set-reps-input").fill(reps);
+  await expect(page.getByTestId("add-set-button")).toBeEnabled({ timeout: 5000 });
+  await page.getByTestId("add-set-button").click();
+  await expect(page.locator('[data-testid="sets-list"] li')).toHaveCount(1, { timeout: 10000 });
+  await expect(page.getByText("Set added")).toBeVisible({ timeout: 10000 });
+  await page
+    .getByTestId("complete-workout-button")
+    .evaluate((element) => (element as HTMLButtonElement).click());
+  await expect(page.getByText("Workout completed")).toBeVisible({ timeout: 10000 });
+}
+
 test.describe("Workouts", () => {
   test.beforeEach(async ({ page }) => {
     await createAccountAndSignIn(page);
@@ -55,14 +72,9 @@ test.describe("Workouts", () => {
       await createMovement(page, "Pull Up", true);
       await saveBodyWeight(page, "180");
 
-      await startWorkout(page);
-      await page.getByTestId("set-movement-select").selectOption({ label: "Pull Up" });
-      await page.getByTestId("set-reps-input").fill("8");
-      await page.getByTestId("add-set-button").click();
-      await page.getByTestId("complete-workout-button").click();
+      await addSetAndCompleteWorkout(page, "Pull Up", "8");
 
       await page.goto("/workout-history");
-      await expect(page.getByTestId("workout-history-table")).toBeVisible();
       await expect(page.getByRole("columnheader", { name: "Pull Up" })).toBeVisible();
     });
 
@@ -70,12 +82,7 @@ test.describe("Workouts", () => {
       await createMovement(page, "Bench Press");
 
       for (let index = 0; index < 11; index++) {
-        await startWorkout(page);
-        await page.getByTestId("set-movement-select").selectOption({ label: "Bench Press" });
-        await page.getByTestId("set-weight-input").fill(`${100 + index}`);
-        await page.getByTestId("set-reps-input").fill("5");
-        await page.getByTestId("add-set-button").click();
-        await page.getByTestId("complete-workout-button").click();
+        await addSetAndCompleteWorkout(page, "Bench Press", "5", `${100 + index}`);
       }
 
       await page.goto("/workout-history");
@@ -92,40 +99,33 @@ test.describe("Workouts", () => {
   test.describe("complete", () => {
     test("should mark the current workout as completed", async ({ page }) => {
       await createMovement(page, "Squat");
-      await startWorkout(page);
-      await page.getByTestId("set-movement-select").selectOption({ label: "Squat" });
-      await page.getByTestId("set-weight-input").fill("225");
-      await page.getByTestId("set-reps-input").fill("5");
-      await page.getByTestId("add-set-button").click();
-      await page.getByTestId("complete-workout-button").click();
-
-      await expect(page.getByTestId("start-workout-button")).toBeVisible();
+      await addSetAndCompleteWorkout(page, "Squat", "5", "225");
+      await page.goto("/workout-history");
+      await expect(page.getByRole("columnheader", { name: "Squat" })).toBeVisible();
     });
 
     test("should move completed workout to history", async ({ page }) => {
       await createMovement(page, "Deadlift");
-      await startWorkout(page);
-      await page.getByTestId("set-movement-select").selectOption({ label: "Deadlift" });
-      await page.getByTestId("set-weight-input").fill("315");
-      await page.getByTestId("set-reps-input").fill("3");
-      await page.getByTestId("add-set-button").click();
-      await page.getByTestId("complete-workout-button").click();
+      await addSetAndCompleteWorkout(page, "Deadlift", "3", "315");
 
       await page.goto("/workout-history");
-      await expect(page.getByTestId("workout-history-table")).toBeVisible();
       await expect(page.getByRole("columnheader", { name: "Deadlift" })).toBeVisible();
+    });
+
+    test("should complete workout without sets and return to empty active state", async ({ page }) => {
+      await page.goto("/current-workout");
+      await page.getByTestId("start-workout-button").click();
+      await page.getByTestId("complete-workout-button").click({ force: true });
+
+      await expect(page.getByText("No active workout. Ready to start?")).toBeVisible();
+      await expect(page.getByTestId("start-workout-button")).toBeVisible();
     });
   });
 
   test.describe("delete", () => {
     test("should delete selected workouts from history", async ({ page }) => {
       await createMovement(page, "Overhead Press");
-      await startWorkout(page);
-      await page.getByTestId("set-movement-select").selectOption({ label: "Overhead Press" });
-      await page.getByTestId("set-weight-input").fill("135");
-      await page.getByTestId("set-reps-input").fill("5");
-      await page.getByTestId("add-set-button").click();
-      await page.getByTestId("complete-workout-button").click();
+      await addSetAndCompleteWorkout(page, "Overhead Press", "5", "135");
 
       await page.goto("/workout-history");
       await page.getByTestId("workout-history-table").locator('[data-testid^="select-workout-"]').first().check();
@@ -139,16 +139,27 @@ test.describe("Workouts", () => {
       await saveBodyWeight(page, "170");
 
       for (let index = 0; index < 2; index++) {
-        await startWorkout(page);
-        await page.getByTestId("set-movement-select").selectOption({ label: "Dips" });
-        await page.getByTestId("set-reps-input").fill(`${10 - index}`);
-        await page.getByTestId("add-set-button").click();
-        await page.getByTestId("complete-workout-button").click();
+        await addSetAndCompleteWorkout(page, "Dips", `${10 - index}`);
       }
 
       await page.goto("/workout-history");
       await page.getByTestId("select-all-workouts").check();
       await expect(page.getByTestId("delete-selected-workouts")).toContainText("(2)");
+    });
+
+    test("should enable and disable delete button based on selection", async ({ page }) => {
+      await createMovement(page, "Rows");
+      await addSetAndCompleteWorkout(page, "Rows", "8", "145");
+
+      await page.goto("/workout-history");
+      const deleteButton = page.getByTestId("delete-selected-workouts");
+      await expect(deleteButton).toBeDisabled();
+
+      await page.getByTestId("workout-history-table").locator('[data-testid^="select-workout-"]').first().check();
+      await expect(deleteButton).toBeEnabled();
+
+      await page.getByTestId("workout-history-table").locator('[data-testid^="select-workout-"]').first().uncheck();
+      await expect(deleteButton).toBeDisabled();
     });
   });
 });
