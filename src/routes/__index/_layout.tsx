@@ -1,5 +1,5 @@
 import { createFileRoute, Link, Outlet, redirect, useRouter } from "@tanstack/react-router";
-import { Dumbbell, History, BicepsFlexed, User, LogOut, Scale, LoaderCircle } from "lucide-react";
+import { Dumbbell, History, BicepsFlexed, User, LogOut, Scale, LoaderCircle, Apple } from "lucide-react";
 import { useState } from "react";
 import { Button } from "@/components/ui/button";
 import { cn } from "@/lib/utils";
@@ -17,6 +17,7 @@ const navItems = [
   { to: "/workout-history", label: "Workout History", icon: History },
   { to: "/movements", label: "Movements", icon: BicepsFlexed },
   { to: "/body-weight", label: "Body Weight", icon: Scale },
+  { to: "/nutrition", label: "Nutrition", icon: Apple },
 ] as const;
 
 function RouteComponent() {
@@ -67,7 +68,6 @@ function RouteComponent() {
 
       <div className="mx-auto flex w-full max-w-7xl gap-6 p-4 pb-24 md:h-[calc(100dvh-5.5rem)] md:items-start md:overflow-hidden md:p-6 md:pb-6">
         <nav className="hidden h-full w-72 shrink-0 flex-col overflow-hidden rounded-2xl border border-slate-200/80 bg-white/85 p-4 shadow-[0_20px_48px_-38px_rgba(8,47,73,0.45)] backdrop-blur md:flex">
-          <img src="/wordmark.svg" alt="Logo" className="mb-8 h-6" />
           <div className="flex min-h-0 flex-1 flex-col gap-1.5 overflow-y-auto pr-1">
             {navItems.map(({ to, label, icon: Icon }) => (
               <Link
