@@ -19,7 +19,7 @@ const SCRYPT_PARAMS = { N: 16384, r: 8, p: 1, keylen: 64 };
 const signInRateLimits = new Map<string, { attempts: number; firstAttemptAt: number; blockedUntil?: number }>();
 let lastSignInMapPruneAt = 0;
 
-if (process.env.NODE_ENV === "production" && COOKIE_SECRET === "dev-secret-change-in-production") {
+if (typeof window === "undefined" && process.env.NODE_ENV === "production" && COOKIE_SECRET === "dev-secret-change-in-production") {
   throw new Error("COOKIE_SECRET must be configured in production.");
 }
 
