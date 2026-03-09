@@ -16,6 +16,7 @@ model User {
   workouts          Workout[]
   movements         Movement[]
   bodyWeightEntries BodyWeightEntry[]
+  nutritionEntries  NutritionEntry[]
 }
 
 model Movement {
@@ -62,6 +63,20 @@ model BodyWeightEntry {
   weight     Int
   measuredAt DateTime @default(now())
   createdAt  DateTime @default(now())
+
+  @@index([userId, measuredAt(sort: Desc)])
+}
+
+model NutritionEntry {
+  id        String   @id @default(uuid())
+  userId    String
+  user      User     @relation(fields: [userId], references: [id])
+  calories  Int
+  protein   Int
+  carbs     Int
+  fat       Int
+  measuredAt DateTime @default(now())
+  createdAt DateTime @default(now())
 
   @@index([userId, measuredAt(sort: Desc)])
 }
