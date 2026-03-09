@@ -8,7 +8,7 @@ export default defineConfig({
   workers: 1,
   reporter: "html",
   use: {
-    baseURL: "http://localhost:3000",
+    baseURL: "http://localhost:4173",
     trace: "on-first-retry",
   },
   projects: [
@@ -17,4 +17,11 @@ export default defineConfig({
       use: { ...devices["Desktop Chrome"] },
     },
   ],
+  webServer: {
+    command:
+      "npm run build && PORT=4173 ENVIRONMENT=development VITE_ENVIRONMENT=development DATABASE_URL=postgresql://postgres:postgres@localhost:5432/demo_project COOKIE_SECRET=change-me-in-production node .output/server/index.mjs",
+    url: "http://localhost:4173",
+    reuseExistingServer: false,
+    timeout: 180 * 1000,
+  },
 });
